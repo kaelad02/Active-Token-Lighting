@@ -444,5 +444,86 @@ class ATL {
 window.ATLUpdate = ATLUpdate
 
 Hooks.on('init', ATL.init);
-Hooks.on('ready', ATL.ready)
+//Hooks.on('ready', ATL.ready)
 Hooks.on('getSceneControlButtons', ATL.getSceneControlButtons)
+
+TokenDocument.prototype.prepareEmbeddedDocuments = function() {
+    console.log("ATE | inside TokenDocument#prepareEmbeddedDocuments", this);
+    //super.prepareEmbeddedDocuments();
+
+    // apply active effects
+
+    const changes = this.actor.effects
+        // non-disabled
+        .filter(e => !e.disabled && !e.isSuppressed)
+        // only ATL effects
+        .filter(e => e.changes.some(c => c.key.startsWith("ATL.")))
+        // duplicate for use
+        .flatMap(e => e.changes.map(c => {
+            c = duplicate(c);
+            c.effect = e;
+            c.priority = c.priority ?? (c.mode * 10);
+            return c;
+        }))
+        // filter individual changes again
+        .filter(c => c.key.startsWith("ATL."));
+    // remove prefix, then sort
+    changes.forEach(c => c.key = c.key.slice(4))
+    changes.sort((a, b) => a.priority - b.priority);
+
+    console.log("ATE | apply these effects", changes);
+
+    // apply changes
+    const overrides = {};
+    for (const change of changes) {
+        // TODO handle special cases like prototype, etc.
+        const changes = change.effect.apply(this, change);
+        Object.assign(overrides, changes);
+    }
+    console.log("ATE | overrides computed", overrides);
+};
+
+Hooks.on("createActiveEffect", (effect, options, userId) => {
+    if (effect.parent?.documentName === "Actor" && effect.changes.some(c => c.key.startsWith("ATL.")))
+        resetTokenDocs(effect.parent);
+});
+
+Hooks.on("updateActiveEffect", (effect, change, options, userId) => {
+    // TODO selectively update based on the change
+    if (effect.parent?.documentName === "Actor")
+        resetTokenDocs(effect.parent);
+});
+
+Hooks.on("deleteActiveEffect", (effect, options, userId) => {
+    if (effect.parent?.documentName === "Actor" && effect.changes.some(c => c.key.startsWith("ATL.")))
+        resetTokenDocs(effect.parent);
+});
+
+function resetTokenDocs(actor) {
+    //console.log("ATE | resetTokenDocs");
+
+    if (actor.token) {
+        console.log("ATE | found an unlinked token on a scene");
+        actor.token.document.reset();
+    } else if (!actor.prototypeToken?.actorLink) {
+        console.log("ATE | found an unlinked token in sidebar");
+    } else {
+        console.log("ATE | found a linked token");
+        const tokenDocs = actor.getActiveTokens(true, true);
+        for (const doc of tokenDocs) {
+            doc.reset();
+        }
+    }
+
+    /* let link = getProperty(entity, "prototypeToken.actorLink")
+    if (link === undefined) link = true
+    let tokenArray = []
+    if (!link) tokenArray = [entity.token?.object]
+    else tokenArray = entity.getActiveTokens() */
+
+    
+}
+
+Hooks.on("applyActiveEffect", (actor, change, current, delta, changes) => {
+    // TODO handle custom change mode
+});
