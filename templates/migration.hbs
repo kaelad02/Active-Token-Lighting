@@ -1,0 +1,13 @@
+<section class="standard-form scrollable">
+  <p>migration description</p>
+  <div class="warning"><i class="fas fa-triangle-exclamation"></i> Backup Warning</div>
+
+  <div class="form-group">
+    <label>Compendium Pack</label>
+    <div class="form-fields">
+      <select name="pack" data-dtype="String">
+        {{selectOptions packs valueAttr="id" labelAttr="label" groups=packages blank=""}}
+      </select>
+    </div>
+  </div>
+</section>

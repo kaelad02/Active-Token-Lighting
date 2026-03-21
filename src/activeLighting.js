@@ -1,5 +1,6 @@
 import { PresetConfig } from "./preset-config.js";
 import { ATLUpdate } from "./updateManager.js";
+import migration from "./migration.js";
 
 const { deepClone, duplicate, flattenObject, getProperty, hasProperty, mergeObject, setProperty } = foundry.utils;
 
@@ -87,7 +88,7 @@ class ATL {
             type: String,
         });
 
-
+        migration();
     }
 
     static async ready() {
