@@ -1,3 +1,21 @@
 {
-
+  "ATL.Migration": {
+    "setting": {
+      "name": "Migrate to Core Keys",
+      "label": "Migrate",
+      "hint": "Migrate Active Effect keys from the ATE syntax to core Foundry syntax introduced in v14."
+    },
+    "app": {
+      "title": "Migrate",
+      "description": "Migrate the world data (actors, items, and unlinked tokens on scenes) or compendium packs. Converts the active effect keys from the ATE syntax to the core Foundry syntax introduced in v14. For example: <code>ATL.sight.range</code> is changed to <code>token.sight.range</code>",
+      "warning": "Backup your world or module data before migrating, just in case.",
+      "packLabel": "Compendium Pack",
+      "worldButton": "Migrate World",
+      "packButton": "Migrate Pack"
+    },
+    "notifications": {
+      "worldStart": "Migrating world data",
+      "worldEnd": "Migration completed successfully. Updated {number} documents."
+    }
+  }
 }

@@ -2,9 +2,9 @@ const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
 export default function init() {
   game.settings.registerMenu("ATL", "migration", {
-    name: "Migration",
-    label: "Mig label",
-    hint: "foobar",
+    name: "ATL.Migration.setting.name",
+    label: "ATL.Migration.setting.label",
+    hint: "ATL.Migration.setting.hint",
     icon: "fas fa-refresh",
     type: MigrationConfig,
     restricted: true,
@@ -16,7 +16,7 @@ class MigrationConfig extends HandlebarsApplicationMixin(ApplicationV2) {
     window: {
       contentClasses: ["standard-form"],
       icon: "fas fa-refresh",
-      title: "Mig label"
+      title: "ATL.Migration.app.title"
     },
     position: {
       width: 480
@@ -54,15 +54,15 @@ class MigrationConfig extends HandlebarsApplicationMixin(ApplicationV2) {
       context.packages = packages.values();
     } else if (partId === "footer") {
       context.buttons = [
-        { type: "button", action: "world", icon: "fas fa-globe", label: "Migrate World" },
-        { type: "button", action: "pack", icon: "fas fa-atlas", label: "Migrate Pack" }
+        { type: "button", action: "world", icon: "fas fa-globe", label: "ATL.Migration.app.worldButton" },
+        { type: "button", action: "pack", icon: "fas fa-atlas", label: "ATL.Migration.app.packButton" }
       ];
     }
     return context;
   }
 
   static async migrateWorld() {
-    const progress = ui.notifications.info("Migrate world data", {permanent: true, progress: true});
+    const progress = ui.notifications.info("ATL.Migration.notifications.worldStart", {localize: true, permanent: true, progress: true});
 
     const actorUpdates = this._migrateActors(game.actors);
     const actorResults = await foundry.documents.modifyBatch(actorUpdates);
@@ -81,7 +81,8 @@ class MigrationConfig extends HandlebarsApplicationMixin(ApplicationV2) {
     progress.update({pct: 1.0});
 
     const updateCount = actorResults.length + itemResults.length + unlinkedResults.length + tokenResults.length;
-    ui.notifications.info(`Migration completed successfully. Total number of updated documents: ${updateCount}`, {permanent: true});
+    const endMessage = game.i18n.format("ATL.Migration.notifications.worldEnd", {number: updateCount});
+    ui.notifications.info(endMessage, {permanent: true});
   }
 
   _migrateActors(actors) {

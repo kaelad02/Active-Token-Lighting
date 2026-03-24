@@ -1,9 +1,9 @@
 <section class="standard-form scrollable">
-  <p>migration description</p>
-  <div class="warning"><i class="fas fa-triangle-exclamation"></i> Backup Warning</div>
+  <p>{{{localize "ATL.Migration.app.description"}}}</p>
+  <div class="warning"><i class="fas fa-triangle-exclamation"></i> {{localize "ATL.Migration.app.warning"}}</div>
 
   <div class="form-group">
-    <label>Compendium Pack</label>
+    <label>{{localize "ATL.Migration.app.packLabel"}}</label>
     <div class="form-fields">
       <select name="pack" data-dtype="String">
         {{selectOptions packs valueAttr="id" labelAttr="label" groups=packages blank=""}}
