@@ -14,7 +14,7 @@ export default function init() {
 class MigrationConfig extends HandlebarsApplicationMixin(ApplicationV2) {
   static DEFAULT_OPTIONS = {
     window: {
-      contentClasses: ["standard-form"],
+      contentClasses: ["standard-form", "ate-migration"],
       icon: "fas fa-refresh",
       title: "ATL.Migration.app.title"
     },
