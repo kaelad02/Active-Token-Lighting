@@ -123,7 +123,26 @@ class MigrationConfig extends HandlebarsApplicationMixin(ApplicationV2) {
 
   _migrateTokens(scenes) {
     const batchUpdates = [];
-    // TODO manually cleanup tokens
+    for (const scene of scenes) {
+      for (const token of scene.tokens) {
+        // only cleanup token if the originals flag still has data
+        const originals = token.flags.ATL?.originals;
+        if (foundry.utils.isEmpty(originals)) continue;
+
+        // start the update by deleting the flag
+        const update = { _id: token.id, "flags.ATL.originals": _del };
+        // update with the original values
+        for (const [key, value] of Object.entries(foundry.utils.flattenObject(originals))) {
+          update[key] = value;
+        }
+        batchUpdates.push({
+          action: "update",
+          documentName: "TokenDocument",
+          updates: [update],
+          parent: scene
+        });
+      }
+    }
     return batchUpdates;
   }
 
