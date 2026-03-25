@@ -15,7 +15,9 @@
     },
     "notifications": {
       "worldStart": "Migrating world data",
-      "worldEnd": "Migration completed successfully. Updated {number} documents."
+      "worldEnd": "Migration of world data completed successfully. Updated {number} documents.",
+      "packStart": "Migrating {pack} compendium pack",
+      "packEnd": "Migration of {pack} compendium pack completed successfully. Updated {number} documents."
     }
   }
 }

@@ -13,6 +13,7 @@ export default function init() {
 
 class MigrationConfig extends HandlebarsApplicationMixin(ApplicationV2) {
   static DEFAULT_OPTIONS = {
+    tag: "form",
     window: {
       contentClasses: ["standard-form", "ate-migration"],
       icon: "fas fa-refresh",
@@ -22,8 +23,12 @@ class MigrationConfig extends HandlebarsApplicationMixin(ApplicationV2) {
       width: 480
     },
     actions: {
-      world: this.migrateWorld,
-      pack: this.migratePack
+      world: this.migrateWorld
+    },
+    form: {
+      handler: this.migratePack,
+      submitOnChange: false,
+      closeOnSubmit: false
     }
   };
 
@@ -55,7 +60,7 @@ class MigrationConfig extends HandlebarsApplicationMixin(ApplicationV2) {
     } else if (partId === "footer") {
       context.buttons = [
         { type: "button", action: "world", icon: "fas fa-globe", label: "ATL.Migration.app.worldButton" },
-        { type: "button", action: "pack", icon: "fas fa-atlas", label: "ATL.Migration.app.packButton" }
+        { type: "submit", icon: "fas fa-atlas", label: "ATL.Migration.app.packButton" }
       ];
     }
     return context;
@@ -82,6 +87,46 @@ class MigrationConfig extends HandlebarsApplicationMixin(ApplicationV2) {
 
     const updateCount = actorResults.length + itemResults.length + unlinkedResults.length + tokenResults.length;
     const endMessage = game.i18n.format("ATL.Migration.notifications.worldEnd", {number: updateCount});
+    ui.notifications.info(endMessage, {permanent: true});
+  }
+
+  static async migratePack(event, form, formData) {
+    const submitData = foundry.utils.expandObject(formData.object);
+    const pack = game.packs.get(submitData.pack);
+
+    const startMessage = game.i18n.format("ATL.Migration.notifications.packStart", {pack: pack.title});
+    const progress = ui.notifications.info(startMessage, {permanent: true, progress: true});
+
+    const chunkFn = (array, size) => {
+      const chunkedArray = [];
+      for (let i = 0; i < array.length; i += size) {
+        chunkedArray.push(array.slice(i, i + size));
+      }
+      return chunkedArray;
+    };
+    let numberOfUpdates = 0;
+
+    switch (pack.metadata.type) {
+      case "Actor":
+        let numberProcessed = 0;
+
+        const ids = [...pack.index.keys()];
+
+        // process Actors, one chunk at a time
+        for (const chunk of chunkFn(ids, 100)) {
+          const actors = await pack.getDocuments({_id__in: chunk});
+          const updates = this._migrateActors(actors);
+          const results = await foundry.documents.modifyBatch(updates);
+          // updates done, show progress
+          numberProcessed += chunk.length;
+          numberOfUpdates += results.length;
+          progress.update({pct: numberProcessed / ids.length});
+        }
+        break;
+      // TODO more cases
+    }
+
+    const endMessage = game.i18n.format("ATL.Migration.notifications.packEnd", {pack: pack.title, number: numberOfUpdates});
     ui.notifications.info(endMessage, {permanent: true});
   }
 
