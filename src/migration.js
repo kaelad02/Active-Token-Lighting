@@ -23,12 +23,8 @@ class MigrationConfig extends HandlebarsApplicationMixin(ApplicationV2) {
       width: 480
     },
     actions: {
-      world: this.migrateWorld
-    },
-    form: {
-      handler: this.migratePack,
-      submitOnChange: false,
-      closeOnSubmit: false
+      world: this.migrateWorld,
+      pack: this.migratePack
     }
   };
 
@@ -60,7 +56,7 @@ class MigrationConfig extends HandlebarsApplicationMixin(ApplicationV2) {
     } else if (partId === "footer") {
       context.buttons = [
         { type: "button", action: "world", icon: "fas fa-globe", label: "ATL.Migration.app.worldButton" },
-        { type: "submit", icon: "fas fa-atlas", label: "ATL.Migration.app.packButton" }
+        { type: "button", action: "pack", icon: "fas fa-atlas", label: "ATL.Migration.app.packButton" }
       ];
     }
     return context;
@@ -90,10 +86,8 @@ class MigrationConfig extends HandlebarsApplicationMixin(ApplicationV2) {
     ui.notifications.info(endMessage, {permanent: true});
   }
 
-  static async migratePack(event, form, formData) {
-    const submitData = foundry.utils.expandObject(formData.object);
-    const pack = game.packs.get(submitData.pack);
-
+  static async migratePack(event, target) {
+    const pack = game.packs.get(target.form.pack.value);
     const startMessage = game.i18n.format("ATL.Migration.notifications.packStart", {pack: pack.title});
     const progress = ui.notifications.info(startMessage, {permanent: true, progress: true});
 
