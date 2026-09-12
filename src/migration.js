@@ -92,9 +92,15 @@ class MigrationConfig extends HandlebarsApplicationMixin(ApplicationV2) {
 
   static async migratePack(event, target) {
     const pack = game.packs.get(target.form.pack.value);
-    const startMessage = game.i18n.format("ATL.Migration.notifications.packStart", {pack: pack.title});
-    const progress = ui.notifications.info(startMessage, {permanent: true, progress: true});
-    let migrated = 0, totalDocuments = 0;
+    const ids = [...pack.index.keys()];
+
+    const progress = ui.notifications.info("ATL.Migration.notifications.packStart", {
+      format: { pack: pack.title },
+      permanent: true,
+      progress: true
+    });
+    const totalDocuments = ids.length;
+    let migrated = 0;
     const incrementProgress = (num) => progress.update({ pct: (migrated += num) / totalDocuments });
 
     const chunkFn = (array, size) => {
@@ -108,9 +114,6 @@ class MigrationConfig extends HandlebarsApplicationMixin(ApplicationV2) {
 
     switch (pack.metadata.type) {
       case "Actor":
-        const ids = [...pack.index.keys()];
-        totalDocuments = ids.length;
-
         // process Actors, one chunk at a time
         for (const chunk of chunkFn(ids, 100)) {
           const actors = await pack.getDocuments({_id__in: chunk});
@@ -121,11 +124,39 @@ class MigrationConfig extends HandlebarsApplicationMixin(ApplicationV2) {
           incrementProgress(chunk.length);
         }
         break;
-      // TODO more cases
+      case "Item":
+        // process Items, one chunk at a time
+        for (const chunk of chunkFn(ids, 100)) {
+          const items = await pack.getDocuments({_id__in: chunk});
+          const updates = this._migrateItems(items);
+          const results = await foundry.documents.modifyBatch(updates);
+          // updates done, show progress
+          updateCount += results.length;
+          incrementProgress(chunk.length);
+        }
+        break;
+      case "Scene":
+        // process Scenes, one chunk at a time
+        for (const chunk of chunkFn(ids, 100)) {
+          const scenes = await pack.getDocuments({_id__in: chunk});
+          // unlinked actors first
+          let updates = this._migrateUnlinkedActors(scenes);
+          let results = await foundry.documents.modifyBatch(updates);
+          updateCount += results.length;
+          // tokens second
+          updates = this._migrateTokens(scenes);
+          results = await foundry.documents.modifyBatch(updates);
+          updateCount += results.length;
+          // updates done, show progress
+          incrementProgress(chunk.length);
+        }
+        break;
     }
 
-    const endMessage = game.i18n.format("ATL.Migration.notifications.packEnd", {pack: pack.title, number: updateCount});
-    ui.notifications.info(endMessage, {permanent: true});
+    ui.notifications.info("ATL.Migration.notifications.packEnd", {
+      format: { pack: pack.title, number: updateCount },
+      permanent: true
+    });
   }
 
   _migrateActors(actors) {
