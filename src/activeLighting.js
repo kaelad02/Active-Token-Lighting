@@ -66,14 +66,14 @@ class ATL {
                 id: "ATLPresetFlashlight"
             }
         ]
-        game.settings.register("ATL", "size", {
+        /*game.settings.register("ATL", "size", {
             name: "Size Adjustment with Flags",
             hint: "Allow for size adjustment to be made with flags, always returns tokens to prototype token defaults if flag is not present",
             scope: "world",
             config: true,
             default: false,
             type: Boolean,
-        });
+        });*/
         game.settings.register("ATL", "presets", {
             scope: "world",
             config: false,
