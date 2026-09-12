@@ -64,22 +64,26 @@ class MigrationConfig extends HandlebarsApplicationMixin(ApplicationV2) {
 
   static async migrateWorld() {
     const progress = ui.notifications.info("ATL.Migration.notifications.worldStart", {localize: true, permanent: true, progress: true});
+    const numTokens = game.scenes.reduce((total, s) => total + s.tokens.size, 0);
+    const totalDocuments = game.actors.size + game.items.size + 2 * numTokens;
+    let migrated = 0;
+    const incrementProgress = (num) => progress.update({ pct: (migrated += num) / totalDocuments });
 
     const actorUpdates = this._migrateActors(game.actors);
     const actorResults = await foundry.documents.modifyBatch(actorUpdates);
-    progress.update({pct: 0.5});
+    incrementProgress(game.actors.size);
 
     const itemUpdates = this._migrateItems(game.items);
     const itemResults = await foundry.documents.modifyBatch(itemUpdates);
-    progress.update({pct: 0.75});
+    incrementProgress(game.items.size);
 
     const unlinkedUpdates = this._migrateUnlinkedActors(game.scenes);
     const unlinkedResults = await foundry.documents.modifyBatch(unlinkedUpdates);
-    progress.update({pct: 0.9});
+    incrementProgress(numTokens);
 
     const tokenUpdates = this._migrateTokens(game.scenes);
     const tokenResults = await foundry.documents.modifyBatch(tokenUpdates);
-    progress.update({pct: 1.0});
+    incrementProgress(numTokens);
 
     const updateCount = actorResults.length + itemResults.length + unlinkedResults.length + tokenResults.length;
     const endMessage = game.i18n.format("ATL.Migration.notifications.worldEnd", {number: updateCount});
@@ -90,6 +94,8 @@ class MigrationConfig extends HandlebarsApplicationMixin(ApplicationV2) {
     const pack = game.packs.get(target.form.pack.value);
     const startMessage = game.i18n.format("ATL.Migration.notifications.packStart", {pack: pack.title});
     const progress = ui.notifications.info(startMessage, {permanent: true, progress: true});
+    let migrated = 0, totalDocuments = 0;
+    const incrementProgress = (num) => progress.update({ pct: (migrated += num) / totalDocuments });
 
     const chunkFn = (array, size) => {
       const chunkedArray = [];
@@ -98,13 +104,12 @@ class MigrationConfig extends HandlebarsApplicationMixin(ApplicationV2) {
       }
       return chunkedArray;
     };
-    let numberOfUpdates = 0;
+    let updateCount = 0;
 
     switch (pack.metadata.type) {
       case "Actor":
-        let numberProcessed = 0;
-
         const ids = [...pack.index.keys()];
+        totalDocuments = ids.length;
 
         // process Actors, one chunk at a time
         for (const chunk of chunkFn(ids, 100)) {
@@ -112,15 +117,14 @@ class MigrationConfig extends HandlebarsApplicationMixin(ApplicationV2) {
           const updates = this._migrateActors(actors);
           const results = await foundry.documents.modifyBatch(updates);
           // updates done, show progress
-          numberProcessed += chunk.length;
-          numberOfUpdates += results.length;
-          progress.update({pct: numberProcessed / ids.length});
+          updateCount += results.length;
+          incrementProgress(chunk.length);
         }
         break;
       // TODO more cases
     }
 
-    const endMessage = game.i18n.format("ATL.Migration.notifications.packEnd", {pack: pack.title, number: numberOfUpdates});
+    const endMessage = game.i18n.format("ATL.Migration.notifications.packEnd", {pack: pack.title, number: updateCount});
     ui.notifications.info(endMessage, {permanent: true});
   }
 
