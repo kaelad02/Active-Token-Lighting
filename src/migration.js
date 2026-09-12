@@ -86,8 +86,10 @@ class MigrationConfig extends HandlebarsApplicationMixin(ApplicationV2) {
     incrementProgress(numTokens);
 
     const updateCount = actorResults.length + itemResults.length + unlinkedResults.length + tokenResults.length;
-    const endMessage = game.i18n.format("ATL.Migration.notifications.worldEnd", {number: updateCount});
-    ui.notifications.info(endMessage, {permanent: true});
+    ui.notifications.info("ATL.Migration.notifications.worldEnd", {
+      format: { number: updateCount },
+      permanent: true
+    });
   }
 
   static async migratePack(event, target) {
