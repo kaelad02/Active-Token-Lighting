@@ -17,7 +17,9 @@
       "worldStart": "Migrating world data",
       "worldEnd": "Migration of world data completed successfully. Updated {number} documents.",
       "packStart": "Migrating {pack} compendium pack",
-      "packEnd": "Migration of {pack} compendium pack completed successfully. Updated {number} documents."
+      "packEnd": "Migration of {pack} compendium pack completed successfully. Updated {number} documents.",
+      "presetWarn": "Migration of ATL.preset not supported. Check the console for a list of UUIDs.",
+      "presetConsole": "Migration of ATL.preset not supported, UUID:"
     }
   }
 }

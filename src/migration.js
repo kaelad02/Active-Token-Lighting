@@ -39,6 +39,8 @@ class MigrationConfig extends HandlebarsApplicationMixin(ApplicationV2) {
 
   static REGEX = /^ATL\./;
 
+  showedPresetNotification = false;
+
   async _preparePartContext(partId, context) {
     if (partId === "form") {
       // add world, then system, then modules
@@ -86,7 +88,7 @@ class MigrationConfig extends HandlebarsApplicationMixin(ApplicationV2) {
     incrementProgress(numTokens);
 
     const updateCount = actorResults.length + itemResults.length + unlinkedResults.length + tokenResults.length;
-    ui.notifications.info("ATL.Migration.notifications.worldEnd", {
+    ui.notifications.success("ATL.Migration.notifications.worldEnd", {
       format: { number: updateCount },
       permanent: true
     });
@@ -155,7 +157,7 @@ class MigrationConfig extends HandlebarsApplicationMixin(ApplicationV2) {
         break;
     }
 
-    ui.notifications.info("ATL.Migration.notifications.packEnd", {
+    ui.notifications.success("ATL.Migration.notifications.packEnd", {
       format: { pack: pack.title, number: updateCount },
       permanent: true
     });
@@ -229,6 +231,16 @@ class MigrationConfig extends HandlebarsApplicationMixin(ApplicationV2) {
 
     const changes = foundry.utils.deepClone(activeEffect._source.changes);
     for (const change of changes ) {
+      // skip preset
+      if (change.key === "ATL.preset") {
+        if (!this.showedPresetNotification) {
+          ui.notifications.warn("ATL.Migration.notifications.presetWarn", { format: true, permanent: true });
+          this.showedPresetNotification = true;
+        }
+        const message = game.i18n.format("ATL.Migration.notifications.presetConsole");
+        console.warn(message, activeEffect.uuid);
+        continue;
+      }
       change.key = change.key.replace(MigrationConfig.REGEX, "token.");
     }
     return {
